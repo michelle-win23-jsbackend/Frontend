@@ -1,0 +1,115 @@
+﻿@page "/signin"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using Frontend.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Log in</PageTitle>
+
+<section id="sign-in">
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @ErrorMessage
+        </div>
+    }
+
+    <div class="container">
+        <div class="content">
+
+            <h1>Welcome Back</h1>
+            <div class="texts">
+                <p>Don’t have an account yet?</p>
+                <a asp-action="SignUp" asp-controller="Auth">Sign up here.</a>
+            </div>
+
+            <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="LoginUser" FormName="signin" novalidate>
+
+                <div class="forms">
+                    <div class="email">
+                        <label>Email</label>
+                        <InputText type="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="Enter your email" />
+                    </div>
+                    <div class="password">
+                        <label>Password</label>
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="password" aria-required="true" placeholder="Enter your password" />
+                    </div>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input" autocomplete="rememberme" />
+                    <label>Remember me</label>
+                </div>
+                <button type="submit" class="btn-theme-shadow">Sign in</button>
+            </EditForm>
+
+            <div class="box">
+                <a href="/account/forgotyourpassword">Forgot your password?</a>
+                <hr>
+                <h6>Or sign in with your social network</h6>
+            </div>
+
+            <div class="buttons">
+                <button class="btn-gray btn-google"><i class="fa-brands fa-google"></i>Google</button>
+                <button class="btn-gray btn-facebook"><i class="fa-brands fa-facebook-f"></i>Facebook</button>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+@code {
+
+    private string? ErrorMessage { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+        else
+        {
+            ErrorMessage = "Incorrect email or password";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}

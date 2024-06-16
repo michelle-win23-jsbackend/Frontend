@@ -1,0 +1,134 @@
+﻿@page "/courses"
+@attribute [StreamRendering]
+@attribute [Authorize]
+
+<PageTitle>Courses</PageTitle>
+
+<section id="courses">
+    <div class="container">
+
+        <div class="category">
+            <a class="nav-link" asp-action="Home" asp-controller="Default"><img class="home" src="/images/icons/home-icon.svg" />Home</a>
+            <img class="next" src="/images/icons/next-icon.svg" />
+            <a class="nav-link active" asp-action="Index" asp-controller="Courses">Courses</a>
+        </div>
+
+        <div class="navigation">
+            <h1 class="my-4">Courses</h1>
+            <div class="bars">
+                <div class="select-box">
+                    <select>
+                        <option value="" disabled selected>All categories</option>
+                        <option value="category1">Category 1</option>
+                        <option value="category2">Category 2</option>
+                        <option value="category3">Category 3</option>
+                    </select>
+                </div>
+                <div class="search-bar">
+                    <form action="/search" method="get">
+                        <input id="searchQuery" name="searchQuery" placeholder="Search courses">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid">
+
+            @if (courses == null)
+            {
+                <p><em>No courses found yet. Please wait...</em></p>
+            }
+            else
+            {
+                @foreach (var course in courses)
+                {
+                    <a asp-action="Details" asp-controller="Courses" asp-route-id="@course.Id">
+                        <div class="course-card">
+                            <div class="course-card-image">
+                                @if (course.IsBestseller)
+                                {
+                                    <div class="best-seller-tag"><p>Best Seller</p></div>
+                                }
+                                <img src="/images/courses/@course.Image" alt="@course.Title" />
+                                <button class="bookmark-tag"><i class="fa-regular fa-bookmark"></i></button>
+                            </div>
+                            <div class="course-card-body">
+                                <h2 class="h5">@course.Title</h2>
+                                <p class="text-s">@course.Author</p>
+                                <div class="pricing">
+                                    <div class="price @(!string.IsNullOrEmpty(course.DiscountPrice)? "discount-enabled" : "")">
+                                        @course.Price
+                                        @if (!string.IsNullOrEmpty(course.DiscountPrice))
+                                        {
+                                            <span class="old-price">@course.DiscountPrice</span>
+                                        }
+                                    </div>
+                                </div>
+                                <hr>
+                            </div>
+                            <div class="course-card-footer">
+                                <div>
+                                    <p><img src="/images/icons/time-icon.svg" />@course.Hours hours</p>
+                                </div>
+                                <div>
+                                    <p><img src="/images/icons/thumbs-up-icon.svg" />@course.LikesInProcent (@course.LikesInNumbers)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+
+        <nav>
+            <a href="#"><div class="pagination-single-scroll"><p><img src="/images/icons/page-scroller-left-icon.svg"></p></div></a>
+            <a href="#"><div class="pagination-single"><p>1</p></div></a>
+            <a href="#"><div class="pagination-single"><p>2</p></div></a>
+            <a href="#"><div class="pagination-single active"><p>3</p></div></a>
+            <a href="#"><div class="pagination-single"><p>4</p></div></a>
+            <a href="#"><div class=" pagination-single-scroll"><p><img src="/images/icons/page-scroller-right-icon.svg"></p></div></a>
+        </nav>
+
+    </div>
+</section>
+
+<section id="work-with-us">
+    <div class="container">
+        <div class="box">
+            <p>Ready to get started?</p>
+            <h1>Take Your <span>Skills</span> to the Next Level</h1>
+            <a class="btn-theme-s" href="#">Work with us</a>
+        </div>
+        <div class="image">
+            <img src="/images/other/desk-computer-illustration.svg" />
+        </div>
+    </div>
+</section>
+
+@code {
+    private CourseModel[]? courses;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            courses = await Http.GetFromJsonAsync<CourseModel[]>("courseprovider-win23jsbackend-michelle.azurewebsites.net/api/courses");
+        }
+        catch (Exception ex) { }
+    }
+
+    private class CourseModel
+    {
+        public int Id { get; set; }
+        public bool IsBestseller { get; set; }
+        public string Image { get; set; } = null!;
+        public string Title { get; set; } = null!;
+        public string Author { get; set; } = null!;
+        public string Price { get; set; } = null!;
+        public string? DiscountPrice { get; set; }
+        public string Hours { get; set; } = null!;
+        public string LikesInProcent { get; set; } = null!;
+        public string LikesInNumbers { get; set; } = null!;
+    }
+}
